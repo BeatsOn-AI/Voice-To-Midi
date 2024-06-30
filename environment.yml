@@ -19,9 +19,7 @@ dependencies:
   - futures=3.2.0=py27_0
   - icc_rt=2019.0.0=h0cc432a_1
   - icu=58.2=vc9_0
-  - intel-openmp=2022.0.0=h9f7ea03_3663
   - joblib=0.14.1=pyh9f0ad1d_0
-  - jpeg=9b=hb117b5b_2
   - libpng=1.6.34=vc9_0
   - librosa=0.6.3=py_0
   - llvmlite=0.31.0=py27hc56fc5f_0
@@ -36,7 +34,6 @@ dependencies:
   - pyparsing=2.4.7=pyh9f0ad1d_0
   - pyqt=5.6.0=py27_5
   - python=2.7.14=5
-  - qt=5.6.2=vc9he136c73_12
   - resampy=0.2.2=py_0
   - scikit-learn=0.20.3=py27hf381715_0
   - setuptools=39.0.1=py27_0

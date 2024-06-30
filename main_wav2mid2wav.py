@@ -7,14 +7,13 @@ from pydub import AudioSegment
 import subprocess
 import pretty_midi
 import matplotlib.pyplot as plt
-from audio_to_midi_melodia import midi_to_piano_roll_image
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     # parser.add_argument("--folder", default="assets/splices_audio_BMI/", help="Path to input audio file.")
-    parser.add_argument("--folder", default="/Users/adamzinebi/Documents/Beatson/audio2midi/adam_hummed/", help="Path to input audio file.")
+    parser.add_argument("--folder", default="C:\\Users\\buddy\\Documents\\BeatsOn\\Voice-To-Midi\\hummed\\", help="Path to input audio file.")
     parser.add_argument("--bpm", type=int, default=120, help="Tempo of the track in BPM.")
     parser.add_argument("--smooth", type=float, default=0.25,
                         help="Smooth the pitch sequence with a median filter "
@@ -52,11 +51,11 @@ if __name__ == '__main__':
             f_out = f.replace(IFS, IFS_CONVERT)
 
             # wav to mid
-            mid_dir = '{}_mid/'.format(sub)
+            mid_dir = '{}_mid\\'.format(sub)
             if not os.path.exists(mid_dir):
                 os.makedirs(mid_dir)
 
-            command_str = '/usr/local/bin/python3.11 audio_to_midi_melodia.py {f_base}{ifs} {mid_dir}{filename}.mid {bpm} --smooth ' \
+            command_str = 'python C:\\Users\\buddy\\Documents\\BeatsOn\\Voice-To-Midi\\audio_to_midi_melodia.py {f_base}{ifs} {mid_dir}{filename}.mid {bpm} --smooth ' \
                           '{smooth} --minduration {mindur}'.format(f_base=f_base, bpm=BPM, ifs=IFS,
                                                                    smooth=args.smooth, mindur=args.minduration,
                                                                    mid_dir=mid_dir, filename=filename)
@@ -65,7 +64,7 @@ if __name__ == '__main__':
             os.system(command_str)
 
             # mid to wav
-            rec_dir = '{}_rec/'.format(sub)
+            rec_dir = '{}_rec\\'.format(sub)
             if not os.path.exists(rec_dir):
                 os.mkdir(rec_dir)
             os.system('timidity {mid_dir}{filename}.mid -Ow -o {rec_dir}{filename}_rec.wav'.

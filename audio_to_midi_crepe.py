@@ -1,3 +1,4 @@
+# CREATED: 11/9/15 3:57 PM by Justin Salamon <justin.salamon@nyu.edu>
 
 import librosa
 import vamp
@@ -11,6 +12,8 @@ import __init__
 import pretty_midi
 import matplotlib.pyplot as plt
 from utils import *
+from scipy.interpolate import interp1d
+import crepe
 '''
 Extract the melody from an audio file and convert it to MIDI.
 
@@ -138,9 +141,7 @@ def filter_anomalies_and_isolation(notes, deviation_threshold_multiplier=2, skip
     filtered_notes = [note for i, note in enumerate(notes) if i not in confirmed_anomalies]
     return filtered_notes
 
-def audio_to_midi_melodia(infile, outfile, bpm, smooth=0.25, minduration=0.1,
-                          savejams=False):
-
+def audio_to_midi_melodia(infile, outfile, bpm, smooth=0.25, minduration=0.1, savejams=False):
     # define analysis parameters
     fs = 44100
     hop_length = 128  # Librosa's default hop length is 512
@@ -148,46 +149,45 @@ def audio_to_midi_melodia(infile, outfile, bpm, smooth=0.25, minduration=0.1,
     # load audio using librosa
     print("\n \n \n Loading audio...")
     data, sr = librosa.load(infile, sr=fs)  # librosa ensures audio is mono
-    print("Extracting melody f0 with MELODIA...")
-    melody = vamp.collect(data, sr, "mtg-melodia:melodia",
-                          parameters={"voicing": 0.2})
+    
+    print("Extracting melody f0 with CREPE...")
+    time, frequency, confidence, activation = crepe.predict(data, sr, viterbi=True)
 
-    # hop = melody['vector'][0]
-    pitch = melody['vector'][1]
+    # Interpolate CREPE results to match the hop length of 128
+    interpolator = interp1d(time, frequency, kind='linear', fill_value="extrapolate")
+    timestamps = np.arange(0, len(data) / sr, hop_length / sr)
+    pitch = interpolator(timestamps)
 
     # impute missing 0's to compensate for starting timestamp
     pitch = np.insert(pitch, 0, [0]*8)
-
     timestamps = 8 * 128/44100.0 + np.arange(len(pitch)) * (128/44100.0)
-    #print(pitch)
+
     plt.figure(figsize=(10,4))
-    plt.plot(timestamps,pitch)
-    plt.savefig("{outfile}pitch.png".format(outfile=outfile))
+    plt.plot(timestamps, pitch)
+    plt.savefig(f"{outfile}pitch.png")
     plt.close()
+    
     print("Converting Hz to MIDI notes...")
     midi_pitch = hz2midi(pitch)  # Use the same hz2midi function
-    #cent_pitch = freq2cent(pitch)
-    #print(midi_pitch)
+
     plt.figure(figsize=(10,4))
-    plt.plot(timestamps,midi_pitch)
-    plt.savefig("{outfile}pitchmidi.png".format(outfile=outfile))
+    plt.plot(timestamps, midi_pitch)
+    plt.savefig(f"{outfile}pitchmidi.png")
     plt.close()
+
     # segment sequence into individual midi notes
-    notes = midi_to_notes(midi_pitch, fs, hop_length, smooth, minduration)
-    """ notes = convert_to_onset_offset_pitch(notes_prefiltered,hop_length,fs)
+    notes_prefiltered = midi_to_notes(midi_pitch, fs, hop_length, smooth, minduration)
+    notes = convert_to_onset_offset_pitch(notes_prefiltered, hop_length, fs)
 
     notes = note_postprocessing(notes, midi_pitch)
     vibrato, notes = vibrato_detection(notes, midi_pitch)
     notes = small_note_segment(notes, midi_pitch, vibrato)
     notes = onset_offset_adjust(notes, midi_pitch)
-    notes = convert_to_onset_duration_pprev(notes,hop_length,fs) """
-    notes = filter_anomalies_and_isolation(notes, deviation_threshold_multiplier=2, skip_threshold_multiplier=2, isolation_threshold_seconds=0.1)
+    notes = convert_to_onset_duration_pprev(notes, hop_length, fs)
 
     # save note sequence to a midi file
     print("Saving MIDI to disk...")
-    print(notes)
     save_midi(outfile, notes, bpm)
-    #save_midi(outfile[:-4]+"prefiltered.mid",notes_prefiltered,bpm)
 
     if savejams:
         print("Saving JAMS to disk...")

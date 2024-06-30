@@ -1,4 +1,0 @@
-sox
-ffmpeg
-fluidsynth
-timidity
